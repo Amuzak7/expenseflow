@@ -272,7 +272,9 @@ export default function SecurityTab({
         </p>
 
         <div className="flex items-center gap-3">
-          <Select value={timeout} onValueChange={setTimeout_}>
+          <Select
+            value={timeout}
+            onValueChange={(value, eventDetails) => setTimeout_(value ?? '')}>
             <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>

@@ -648,7 +648,10 @@ export default function UsersTab({
             </div>
             <div className="space-y-1.5">
               <Label>ロール</Label>
-              <Select value={inviteRole} onValueChange={setInviteRole}>
+              <Select
+                value={inviteRole}
+                onValueChange={(value) => setInviteRole(value ?? '')}
+              />
                 <SelectTrigger size="default" className="w-36 h-9">
                   <SelectValue />
                 </SelectTrigger>
