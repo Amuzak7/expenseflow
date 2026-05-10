@@ -425,7 +425,7 @@ export default function UsersTab({
                         {ROLE_LABEL[user.role] ?? user.role}
                       </div>
                     ) : (
-                      <Select value={user.role} onValueChange={(val) => handleRoleChange(user.id, val)}>
+                      <Select value={user.role} onValueChange={(val) => handleRoleChange(user.id, val ?? "member")}>
                         <SelectTrigger size="sm" className={cn(
                           "flex-shrink-0 border rounded-full px-2.5 text-xs font-medium",
                           ROLE_BADGE[user.role] ?? ROLE_BADGE.member
@@ -650,8 +650,7 @@ export default function UsersTab({
               <Label>ロール</Label>
               <Select
                 value={inviteRole}
-                onValueChange={(value) => setInviteRole(value ?? '')}
-              />
+                onValueChange={(value) => setInviteRole(value ?? '')}>
                 <SelectTrigger size="default" className="w-36 h-9">
                   <SelectValue />
                 </SelectTrigger>

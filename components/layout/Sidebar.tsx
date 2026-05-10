@@ -20,7 +20,15 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  exact: boolean;
+  comingSoon?: boolean;
+};
+
+const navItems: NavItem[] = [
   {
     href: "/dashboard",
     label: "ダッシュボード",
