@@ -40,6 +40,8 @@ interface ExpensesClientProps {
   initialPendingItems:   PendingExpenseRow[];
   initialApprovedItems:  PendingExpenseRow[];
   isApprover:            boolean;
+  initialUsed:           number;
+  dailyLimit:            number;
 }
 
 // ─────────────────────────────────────────────
@@ -51,6 +53,8 @@ export default function ExpensesClient({
   initialPendingItems,
   initialApprovedItems,
   isApprover,
+  initialUsed,
+  dailyLimit,
 }: ExpensesClientProps) {
   const [tab, setTab]                     = useState<Tab>("new");
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeReceiptResult | null>(null);
@@ -310,7 +314,11 @@ export default function ExpensesClient({
               onSaved={handleSaved}
             />
           ) : (
-            <ReceiptUploader onAnalyzed={handleAnalyzed} />
+            <ReceiptUploader
+              onAnalyzed={handleAnalyzed}
+              initialUsed={initialUsed}
+              dailyLimit={dailyLimit}
+            />
           )
         )}
 

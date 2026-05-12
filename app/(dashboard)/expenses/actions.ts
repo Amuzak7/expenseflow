@@ -60,6 +60,29 @@ export interface AnalyzeReceiptResult {
   analysis: ReceiptAnalysis;
 }
 
+const DEMO_EMAIL          = "demo@expenseflow.com";
+const DAILY_LIMIT_NORMAL  = 5;
+const DAILY_LIMIT_DEMO    = 30;
+
+/** 今日の残り解析回数を返す（未認証時は 0） */
+export async function getAnalysisUsage(): Promise<{ used: number; limit: number }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { used: 0, limit: DAILY_LIMIT_NORMAL };
+
+  const limit = user.email === DEMO_EMAIL ? DAILY_LIMIT_DEMO : DAILY_LIMIT_NORMAL;
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data } = await supabase
+    .from("user_usage")
+    .select("analysis_count")
+    .eq("user_id", user.id)
+    .eq("date", today)
+    .single();
+
+  return { used: data?.analysis_count ?? 0, limit };
+}
+
 export async function analyzeReceipt(
   formData: FormData
 ): Promise<ActionResult<AnalyzeReceiptResult>> {
@@ -76,6 +99,25 @@ export async function analyzeReceipt(
     .single();
   if (!profile?.company_id) {
     return { ok: false, error: "会社情報が見つかりません。管理者にお問い合わせください。" };
+  }
+
+  // ── レート制限チェック ────────────────────────
+  const dailyLimit = user.email === DEMO_EMAIL ? DAILY_LIMIT_DEMO : DAILY_LIMIT_NORMAL;
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data: usageRow } = await supabase
+    .from("user_usage")
+    .select("analysis_count")
+    .eq("user_id", user.id)
+    .eq("date", today)
+    .single();
+
+  const currentCount = usageRow?.analysis_count ?? 0;
+  if (currentCount >= dailyLimit) {
+    return {
+      ok: false,
+      error: `本日の解析上限（${dailyLimit}回）に達しました。明日またお試しください。`,
+    };
   }
 
   const file = formData.get("file");
@@ -119,6 +161,14 @@ export async function analyzeReceipt(
     console.error("[analyzeReceipt] Claude Vision error:", err);
     return { ok: false, error: "AIによる解析に失敗しました。もう一度お試しください。" };
   }
+
+  // ── 利用回数をインクリメント ────────────────────
+  await supabase
+    .from("user_usage")
+    .upsert(
+      { user_id: user.id, date: today, analysis_count: currentCount + 1 },
+      { onConflict: "user_id,date" }
+    );
 
   return { ok: true, data: { receiptPath, analysis } };
 }

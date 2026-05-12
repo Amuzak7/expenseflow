@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 
 interface ReceiptUploaderProps {
   onAnalyzed: (result: AnalyzeReceiptResult) => void;
+  initialUsed?: number;
+  dailyLimit?: number;
 }
 
 type UploaderState = "idle" | "preview" | "error";
@@ -23,13 +25,18 @@ const MAX_SIZE_MB = 10;
 // コンポーネント
 // ─────────────────────────────────────────────
 
-export default function ReceiptUploader({ onAnalyzed }: ReceiptUploaderProps) {
+export default function ReceiptUploader({
+  onAnalyzed,
+  initialUsed = 0,
+  dailyLimit = 5,
+}: ReceiptUploaderProps) {
   const [state, setState] = useState<UploaderState>("idle");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [usedCount, setUsedCount] = useState(initialUsed);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -85,6 +92,7 @@ export default function ReceiptUploader({ onAnalyzed }: ReceiptUploaderProps) {
 
       // プレビュー URL をクリーン
       if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setUsedCount((c) => c + 1);
       onAnalyzed(result.data);
     });
   };
@@ -228,6 +236,12 @@ export default function ReceiptUploader({ onAnalyzed }: ReceiptUploaderProps) {
         </div>
         <p className="text-xs text-muted-foreground">
           JPEG · PNG · WEBP · GIF · PDF（最大 10MB）
+        </p>
+        <p className={cn(
+          "text-xs font-medium",
+          usedCount >= dailyLimit ? "text-destructive" : "text-muted-foreground"
+        )}>
+          本日の残り解析回数：{Math.max(0, dailyLimit - usedCount)} / {dailyLimit} 回
         </p>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Receipt } from "lucide-react";
 import ExpensesClient from "./ExpensesClient";
-import { fetchMyExpenses, fetchPendingApprovals, fetchApprovedExpenses } from "./actions";
+import { fetchMyExpenses, fetchPendingApprovals, fetchApprovedExpenses, getAnalysisUsage } from "./actions";
 
 export const metadata: Metadata = {
   title: "経費精算",
@@ -27,10 +27,11 @@ export default async function ExpensesPage() {
   const isApprover = ["admin", "approver"].includes(profile?.role ?? "");
 
   // ── データ並列取得 ────────────────────────────
-  const [expenses, pendingItems, approvedItems] = await Promise.all([
+  const [expenses, pendingItems, approvedItems, analysisUsage] = await Promise.all([
     fetchMyExpenses(),
     isApprover ? fetchPendingApprovals() : Promise.resolve([]),
     isApprover ? fetchApprovedExpenses() : Promise.resolve([]),
+    getAnalysisUsage(),
   ]);
 
   return (
@@ -50,6 +51,8 @@ export default async function ExpensesPage() {
           initialPendingItems={pendingItems}
           initialApprovedItems={approvedItems}
           isApprover={isApprover}
+          initialUsed={analysisUsage.used}
+          dailyLimit={analysisUsage.limit}
         />
       </div>
 
